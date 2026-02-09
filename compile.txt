@@ -1,0 +1,7 @@
+copy the below line to compile the game
+
+g++ src/main.cpp -o src/main.exe -I include -L lib -lraylib -lopengl32 -lgdi32 -luser32 -lws2_32 -lole32 -lwinmm
+
+to run, do 
+
+./src/main.exe
