@@ -7,20 +7,32 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 const int PIXEL_SIZE = 20;
 
+
+bool oppositeDirection(char dir1, char dir2) {
+    return ( (dir1 == 'u' && dir2 == 'd') ||
+             (dir1 == 'r' && dir2 == 'l') ||
+             (dir1 == 'd' && dir2 == 'u') ||
+             (dir1 == 'l' && dir2 == 'r') );
+}
+
 // check for key presses
 void checkKeyPress(char* dir) {
-    if      (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))    *dir = 'u';
-    else if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))  *dir = 'd';
-    else if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))  *dir = 'l';
-    else if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT)) *dir = 'r';
+    if      ((IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP)))    *dir = 'u';
+    else if ((IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN)))  *dir = 'd';
+    else if ((IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT)))  *dir = 'l';
+    else if ((IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))) *dir = 'r';
 }
 
 // update the snake body positions
-void moveSnake(std::vector<Vector2>* snakeBody, Vector2* snakeHead, char snakeDirection, int* frameNum, Vector2* snakeTailBuffer) {
+void moveSnake(std::vector<Vector2>* snakeBody, Vector2* snakeHead, char* snakeDirection, char directionBuffer, int* frameNum, Vector2* snakeTailBuffer) {
     // check if to update movement on given frame, to control speed of snake
     if ((*frameNum)++ % 10 != 0) return; 
 
     *snakeTailBuffer = snakeBody->at(snakeBody->size()-1);
+
+    if (!oppositeDirection(*snakeDirection, directionBuffer)) {
+        *snakeDirection = directionBuffer;
+    }
 
     // Check if snake is more than just head
     if (snakeBody->size() > 1) {
@@ -29,10 +41,10 @@ void moveSnake(std::vector<Vector2>* snakeBody, Vector2* snakeHead, char snakeDi
         }
     }
 
-    if (snakeDirection == 'u') snakeBody->at(0).y -= PIXEL_SIZE;
-    else if (snakeDirection == 'd') snakeBody->at(0).y += PIXEL_SIZE;
-    else if (snakeDirection == 'r') snakeBody->at(0).x += PIXEL_SIZE;
-    else if (snakeDirection == 'l') snakeBody->at(0).x -= PIXEL_SIZE;
+    if (*snakeDirection == 'u') snakeBody->at(0).y -= PIXEL_SIZE;
+    else if (*snakeDirection == 'd') snakeBody->at(0).y += PIXEL_SIZE;
+    else if (*snakeDirection == 'r') snakeBody->at(0).x += PIXEL_SIZE;
+    else if (*snakeDirection == 'l') snakeBody->at(0).x -= PIXEL_SIZE;
     *snakeHead = snakeBody->at(0);
 }
 
@@ -77,6 +89,7 @@ void checkEatApple(Vector2* snakeHead, Vector2* applePos, std::vector<Vector2>* 
 void checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead) {
     // check for boundry collision
     if (snakeBody.at(0).x > SCREEN_WIDTH || snakeBody.at(0).x < 0 || snakeBody.at(0).y > SCREEN_HEIGHT || snakeBody.at(0).y < 0) {
+        std::cout << "Hit Border" << std::endl;
         CloseWindow();
         return;
     }
@@ -85,6 +98,7 @@ void checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead) {
     if (snakeBody.size()>1) {
         for (int i = 1; i < snakeBody.size(); i++) {
             if (snakeBody.at(i).x == snakeHead.x && snakeBody.at(i).y == snakeHead.y) {
+                std::cout << "Hit Snake" << std::endl;
                 CloseWindow();
                 return;
             }
@@ -97,19 +111,27 @@ int main() {
     // Window and Game setup
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "sneck");
     SetTargetFPS(60);
-    int frameNum = 0;
+    int frameNum = 1;
 
     // set up random
     srand(time(NULL));
 
     // Snake Stuff
-    std::vector<Vector2> snakeBody;
-    char snakeDirection = 'o';
+    std::vector<Vector2> snakeBody = {{(float)5*PIXEL_SIZE, (float)SCREEN_HEIGHT/2}, 
+                                      {(float)4*PIXEL_SIZE, (float)SCREEN_HEIGHT/2},
+                                      {(float)3*PIXEL_SIZE, (float)SCREEN_HEIGHT/2}  
+                                    };
+    char snakeDirection = 'r';
+    char directionBuffer = 'r';
     Vector2 snakeHead;
     Vector2 snakeTailBuffer;
 
-    snakeBody.push_back({(float)3*PIXEL_SIZE, (float)SCREEN_HEIGHT/2});
-    snakeHead = snakeBody.front();
+    // snakeBody.push_back({(float)3*PIXEL_SIZE, (float)SCREEN_HEIGHT/2});
+
+    // snakeBody.push_back({(float)5*PIXEL_SIZE, (float)SCREEN_HEIGHT/2});
+    // snakeBody.push_back({(float)4*PIXEL_SIZE, (float)SCREEN_HEIGHT/2});
+    // snakeBody.push_back({(float)3*PIXEL_SIZE, (float)SCREEN_HEIGHT/2});
+    snakeHead = snakeBody.at(0);
 
     // Apple Stuff 
     Vector2 applePos = generateRandomAppleLocation(snakeBody);
@@ -118,8 +140,8 @@ int main() {
     while (!WindowShouldClose()) {
 
         // ------------------------------------   Update Stuff here ------------------------------------
-        checkKeyPress(&snakeDirection);
-        moveSnake(&snakeBody, &snakeHead, snakeDirection, &frameNum, &snakeTailBuffer);
+        checkKeyPress(&directionBuffer);
+        moveSnake(&snakeBody, &snakeHead, &snakeDirection, directionBuffer, &frameNum, &snakeTailBuffer);
         checkEatApple(&snakeHead, &applePos, &snakeBody, snakeTailBuffer);
         checkCollision(snakeBody, snakeHead);
 
@@ -134,7 +156,7 @@ int main() {
 
         // Draw Snake
         for (int i = 0; i <snakeBody.size(); i++) {
-            int g = 255 - (i*5);
+            int g = 255 - (i);
             if (g < 0) g *= -1;
 
             DrawRectangle(snakeBody.at(i).x, snakeBody.at(i).y, PIXEL_SIZE, PIXEL_SIZE, {0, (unsigned char)g, 0, 255});
