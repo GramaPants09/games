@@ -3,6 +3,8 @@
 #include <random>
 #include <iostream>
 #include "snake.h"
+#include <string>
+#include <sstream>
 
 // Define static members
 int Snake::SCREEN_WIDTH = 0;
@@ -23,9 +25,14 @@ Snake::Snake(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int PIXEL_SI
     snakeDirection = 'r';
     directionBuffer = 'r';
     snakeHead = snakeBody.at(0);
+    quitGame = false;
 
     // Apple Stuff 
     applePos = generateRandomAppleLocation(snakeBody);
+
+    font = LoadFont("fonts/goodTiming.otf");
+    score = 0;
+    displayText = "Score: 0";
 }
 
 bool Snake::oppositeDirection(char dir1, char dir2) {
@@ -102,16 +109,20 @@ void Snake::checkEatApple(Vector2* snakeHead, Vector2* applePos, std::vector<Vec
     if (snakeHead->x == applePos->x && snakeHead->y == applePos->y) {
         snakeBody->push_back(snakeTailBuffer);
         *applePos = generateRandomAppleLocation(*snakeBody);
+
+        // put the score in the displayText string
+        std::stringstream ss;
+        ss << "Score: " << ++score;
+        displayText= ss.str();
     }
 }
 
 // checks for collisions between both snake and boundry
-void Snake::checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead) {
+bool Snake::checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead) {
     // check for boundry collision
     if (snakeBody.at(0).x > SCREEN_WIDTH || snakeBody.at(0).x < 0 || snakeBody.at(0).y > SCREEN_HEIGHT || snakeBody.at(0).y < 0) {
         std::cout << "Hit Border" << std::endl;
-        CloseWindow();
-        return;
+        return true;
     }
 
     //check for snake body collision
@@ -119,24 +130,28 @@ void Snake::checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead) {
         for (int i = 1; i < snakeBody.size(); i++) {
             if (snakeBody.at(i).x == snakeHead.x && snakeBody.at(i).y == snakeHead.y) {
                 std::cout << "Hit Snake" << std::endl;
-                CloseWindow();
-                return;
+                return true;
             }
         }
     }
+    return false;
 }
 
-void Snake::update() {
+// calls all the game logic for the snake game
+bool Snake::update() {
+    SetWindowTitle("Games | Snake");
     checkKeyPress(&directionBuffer);
     moveSnake(&snakeBody, &snakeHead, &snakeDirection, directionBuffer, frameNum, &snakeTailBuffer);
     checkEatApple(&snakeHead, &applePos, &snakeBody, snakeTailBuffer);
-    checkCollision(snakeBody, snakeHead);
+    if (checkCollision(snakeBody, snakeHead)) quitGame = true;
+    return quitGame;
 }
 
+// Draws the snake game to screen
 void Snake::draw() {
-    ClearBackground({255,229,99,245});
+    ClearBackground({85,133,121,255});
 
-    // DrawText("This is a game with no name", SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 20, BLACK);
+    DrawText(displayText.c_str(), SCREEN_WIDTH/4, SCREEN_HEIGHT/4, 80, {0,0,0,200});
 
     // Draw Apple
     DrawRectangleV(applePos, {(float)PIXEL_SIZE, (float)PIXEL_SIZE}, RED);
