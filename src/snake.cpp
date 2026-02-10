@@ -16,6 +16,7 @@ Snake::Snake(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int PIXEL_SI
     this->SCREEN_HEIGHT = SCREEN_HEIGHT;
     this->PIXEL_SIZE = PIXEL_SIZE;
     this->frameNum = frameNum;
+    
 
     // Snake Stuff
     snakeBody = {{(float)5*PIXEL_SIZE, (float)SCREEN_HEIGHT/2}, 
@@ -33,6 +34,9 @@ Snake::Snake(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int PIXEL_SI
     font = LoadFont("fonts/goodTiming.otf");
     score = 0;
     displayText = "Score: 0";
+    
+    smurgImg = LoadImage("images/super_smurg.png");
+    smurgTexture = LoadTextureFromImage(smurgImg);
 }
 
 bool Snake::oppositeDirection(char dir1, char dir2) {
@@ -150,6 +154,7 @@ bool Snake::update() {
 // Draws the snake game to screen
 void Snake::draw() {
     ClearBackground({85,133,121,255});
+    DrawTexture(smurgTexture, 0, 0, WHITE);
 
     DrawText(displayText.c_str(), SCREEN_WIDTH/4, SCREEN_HEIGHT/4, 80, {0,0,0,200});
 

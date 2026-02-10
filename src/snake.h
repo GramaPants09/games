@@ -31,6 +31,8 @@ class Snake {
         Vector2 generateRandomAppleLocation(std::vector<Vector2> snakeBody);
         void checkEatApple(Vector2* snakeHead, Vector2* applePos, std::vector<Vector2>* snakeBody, Vector2 snakeTailBuffer);
         bool checkCollision(std::vector<Vector2> snakeBody, Vector2 snakeHead);
+        Image smurgImg;
+        Texture2D smurgTexture;
 
 };
 
